@@ -16,17 +16,20 @@
     /* 页头样式 */
     .header {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
       padding: 20px;
       background-color: #CCD0CF;
       border-bottom: 1px solid #9BA8AB;
     }
+    .header .logo-container {
+      display: flex;
+      align-items: center;
+    }
     .header img.logo {
       width: 100px; /* 根据需要调整宽度 */
       height: auto; /* 保持原始长宽比例 */
-      margin-bottom: 10px;
+      margin-right: 10px;
     }
     .header h1 {
       font-size: 24px;
@@ -35,7 +38,6 @@
     .header .contact-icons {
       display: flex;
       gap: 15px;
-      margin-top: 10px;
     }
     .header .contact-icons a {
       text-decoration: none;
@@ -123,7 +125,9 @@
 <body>
   <!-- 页头 -->
   <header class="header">
-    <img src="photo/资源 3.png" alt="VOLCANOWOOD Logo" class="logo">
+    <div class="logo-container">
+      <img src="photo/资源 3.png" alt="VOLCANOWOOD Logo" class="logo">
+    </div>
     <h1>VOLCANOWOOD</h1>
     <div class="contact-icons">
       <a href="mailto:dnj_james@outlook.com">
