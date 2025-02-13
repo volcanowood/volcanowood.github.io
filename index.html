@@ -1,33 +1,77 @@
-<header>
-  <div style="text-align: center;">
-    <!--volcanowood.github.io/v2.png -->
-    <img src="/assets/avatar.jpg" alt="Your Name" style="width: 150px; height: 150px; border-radius: 50%;">
-    <h1>volcanowood</h1>
-    <!-- 联系方式图标 -->
-    <div>
-      <a href="mailto:dnj_james@outlook.com" style="margin: 0 10px;">
-        <img src="https://img.icons8.com/ios-filled/50/000000/email.png" alt="Email" style="width: 30px; height: 30px;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOLCANOWOOD</title>
+  <style>
+    body {
+      font-family: "Times New Roman", serif;
+      background-color: #CCD0CF;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background-color: #CCD0CF;
+      border-bottom: 1px solid #9BA8AB;
+    }
+    .header h1 {
+      font-size: 24px;
+      margin: 0;
+    }
+    .header .contact-icons {
+      display: flex;
+      gap: 15px;
+    }
+    .header .contact-icons a {
+      text-decoration: none;
+      color: #000;
+    }
+    .header .contact-icons img {
+      width: 24px;
+      height: 24px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>VOLCANOWOOD</h1>
+    <div class="contact-icons">
+      <a href="mailto:dnj_james@outlook.com">
+        <img src="https://img.icons8.com/ios-filled/50/000000/email.png" alt="Email">
       </a>
-      <a href="https://www.instagram.com/volcanowooddesign/" target="_blank" style="margin: 0 10px;">
-        <img src="https://img.icons8.com/ios-filled/50/000000/instagram-new.png" alt="Instagram" style="width: 30px; height: 30px;">
+      <a href="https://www.instagram.com/volcanowooddesign" target="_blank">
+        <img src="https://img.icons8.com/ios-filled/50/000000/instagram-new.png" alt="Instagram">
       </a>
-      <a href="https://www.facebook.com/Volcanowooddesign/" target="_blank" style="margin: 0 10px;">
-        <img src="https://img.icons8.com/ios-filled/50/000000/facebook.png" alt="Facebook" style="width: 30px; height: 30px;">
+      <a href="https://www.facebook.com/Volcanowooddesign" target="_blank">
+        <img src="https://img.icons8.com/ios-filled/50/000000/facebook.png" alt="Facebook">
       </a>
     </div>
-  </div>
-</header>
-<section>
-  <h2>My Projects</h2>
-  <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+  </header><main style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+  <h2 style="text-align: center; margin-bottom: 20px;">My Projects</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
     {% for project in site.data.projects %}
-      <div style="width: 300px; text-align: center;">
+      <div style="background-color: #9BA8AB; border-radius: 10px; overflow: hidden;">
         <a href="{{ project.link }}">
           <img src="{{ project.cover }}" alt="{{ project.title }}" style="width: 100%; height: auto;">
-          <h3>{{ project.title }}</h3>
-          <p>{{ project.description }}</p>
+          <div style="padding: 10px; text-align: center;">
+            <h3>{{ project.title }}</h3>
+            <p>{{ project.description }}</p>
+          </div>
         </a>
       </div>
     {% endfor %}
+    <!-- 如果项目不足 20 个，用占位符填充 -->
+    {% for i in (1..20) %}
+      {% if forloop.index > site.data.projects.size %}
+        <div style="background-color: #9BA8AB; border-radius: 10px; aspect-ratio: 1 / 1;"></div>
+      {% endif %}
+    {% endfor %}
   </div>
-</section>
+</main>
+</body>
+</html>
