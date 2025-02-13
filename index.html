@@ -153,6 +153,7 @@
     <a href="https://volcanowood.github.io/qanda.html">Q&A</a>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/rtf.js/2.1.0/rtf.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const photoGridContainer = document.getElementById('photo-grid-container');
@@ -160,20 +161,24 @@
       // 硬编码文件名
       const files = [
         '01.jpg',
-        '01.txt',
+        '01.rtf',
         '02.jpg',
-        '02.txt',
+        '02.rtf',
         // 添加更多文件...
       ];
 
       // 创建项目项
       for (let i = 0; i < files.length; i += 2) {
         const imageFile = files[i];
-        const textFile = files[i + 1];
+        const rtfFile = files[i + 1];
 
-        fetch(`/文案与图片/${textFile}`)
-          .then(response => response.text())
-          .then(textContent => {
+        fetch(`/文案与图片/${rtfFile}`)
+          .then(response => response.arrayBuffer())
+          .then(arrayBuffer => {
+            const doc = new RtfJs.Document();
+            doc.load(arrayBuffer);
+            const htmlContent = doc.getHtml();
+
             const projectItem = document.createElement('div');
             projectItem.className = 'photo-grid-item';
 
@@ -187,9 +192,9 @@
             const projectDetails = document.createElement('div');
             projectDetails.className = 'project-details';
             const title = document.createElement('h3');
-            title.textContent = textFile.replace('.txt', '');
-            const description = document.createElement('p');
-            description.textContent = textContent;
+            title.textContent = rtfFile.replace('.rtf', '');
+            const description = document.createElement('div');
+            description.innerHTML = htmlContent;
 
             projectDetails.appendChild(title);
             projectDetails.appendChild(description);
@@ -199,7 +204,7 @@
 
             photoGridContainer.appendChild(projectItem);
           })
-          .catch(error => console.error(`Error fetching ${textFile}:`, error));
+          .catch(error => console.error(`Error fetching ${rtfFile}:`, error));
       }
     });
   </script>
