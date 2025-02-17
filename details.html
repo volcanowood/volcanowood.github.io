@@ -92,23 +92,28 @@
           projectDescriptionElement.textContent = 'Failed to load project details.';
         });
 
-      // 自动抓取从 01 到 09 的图片
-      for (let i = 1; i <= 9; i++) {
-        const imageFile = `${projectId}_${i}.JPG`;
+      // 自动抓取所有图片
+      let imageIndex = 1;
+      function loadImage() {
+        const imageFile = `${projectId}_${imageIndex}.JPG`;
         const imgSrc = `/文案与图片/${projectId}/${imageFile}`;
 
         const img = document.createElement('img');
         img.src = imgSrc;
-        img.alt = `Project Image ${i}`;
+        img.alt = `Project Image ${imageIndex}`;
 
         img.onload = () => {
           photoGalleryElement.appendChild(img);
+          imageIndex++;
+          loadImage(); // 继续加载下一张图片
         };
 
         img.onerror = () => {
           console.log(`Image ${imageFile} not found.`);
         };
       }
+
+      loadImage(); // 开始加载第一张图片
     });
   </script>
 </body>
