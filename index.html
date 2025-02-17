@@ -157,70 +157,71 @@
     document.addEventListener('DOMContentLoaded', () => {
       const photoGridContainer = document.getElementById('photo-grid-container');
 
-      // 自动抓取从 01 到 99 的文件
-      const promises = [];
-      for (let i = 1; i <= 99; i++) {
-        const imageFile = `${i.toString().padStart(2, '0')}*.*`.replace('*', '.jpg');
-        const textFile = `${i.toString().padStart(2, '0')}*.*`.replace('*', '.txt');
+      // 获取文件列表
+      fetch('/文案与图片/')
+        .then(response => response.text())
+        .then(data => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data, 'text/html');
+          const links = doc.querySelectorAll('a');
+          const files = Array.from(links).map(link => link.getAttribute('href'));
 
-        const promise = fetch(`/文案与图片/${imageFile}`)
-          .then(imageResponse => {
-            if (!imageResponse.ok) {
-              return null;
+          // 过滤出 jpg 和 txt 文件
+          const imageFiles = files.filter(file => file.endsWith('.jpg'));
+          const textFiles = files.filter(file => file.endsWith('.txt'));
+
+          // 提取数字部分并排序
+          const sortedImageFiles = imageFiles.map(file => ({
+            file,
+            number: parseInt(file.match(/^\d+/)[0], 10)
+          })).sort((a, b) => a.number - b.number);
+
+          const sortedTextFiles = textFiles.map(file => ({
+            file,
+            number: parseInt(file.match(/^\d+/)[0], 10)
+          })).sort((a, b) => a.number - b.number);
+
+          // 创建项目项
+          sortedImageFiles.forEach(imageItem => {
+            const correspondingTextFile = sortedTextFiles.find(textItem => textItem.number === imageItem.number);
+            if (correspondingTextFile) {
+              const projectItem = document.createElement('div');
+              projectItem.className = 'photo-grid-item';
+
+              const projectImage = document.createElement('div');
+              projectImage.className = 'project-image';
+              const img = document.createElement('img');
+              img.src = `/文案与图片/${imageItem.file}`;
+              img.alt = `Project Image`;
+              projectImage.appendChild(img);
+
+              const projectDetails = document.createElement('div');
+              projectDetails.className = 'project-details';
+              const title = document.createElement('h3');
+              title.textContent = correspondingTextFile.file.replace('.txt', '');
+              const description = document.createElement('p');
+              fetch(`/文案与图片/${correspondingTextFile.file}`)
+                .then(response => response.text())
+                .then(textContent => {
+                  description.textContent = textContent;
+                });
+
+              projectDetails.appendChild(title);
+              projectDetails.appendChild(description);
+
+              projectItem.appendChild(projectImage);
+              projectItem.appendChild(projectDetails);
+
+              photoGridContainer.appendChild(projectItem);
+            } else {
+              // 创建一个灰色色块占位符
+              const placeholderItem = document.createElement('div');
+              placeholderItem.className = 'photo-grid-item';
+              placeholderItem.style.backgroundColor = '#ccc';
+              placeholderItem.style.height = '300px'; // 设置固定高度
+
+              photoGridContainer.appendChild(placeholderItem);
             }
-            return fetch(`/文案与图片/${textFile}`)
-              .then(textResponse => {
-                if (!textResponse.ok) {
-                  return null;
-                }
-                return textResponse.text().then(textContent => ({
-                  imageFile,
-                  textFile,
-                  textContent
-                }));
-              });
-          });
-
-        promises.push(promise);
-      }
-
-      Promise.all(promises)
-        .then(results => {
-          // 过滤掉空结果并提取有效的项目
-          const validResults = results.filter(result => result !== null);
-
-          // 提取数字部分进行排序
-          validResults.sort((a, b) => {
-            const numA = parseInt(a.imageFile.match(/^\d+/)[0], 10);
-            const numB = parseInt(b.imageFile.match(/^\d+/)[0], 10);
-            return numA - numB;
-          });
-
-          validResults.forEach(result => {
-            const projectItem = document.createElement('div');
-            projectItem.className = 'photo-grid-item';
-
-            const projectImage = document.createElement('div');
-            projectImage.className = 'project-image';
-            const img = document.createElement('img');
-            img.src = `/文案与图片/${result.imageFile}`;
-            img.alt = `Project Image`;
-            projectImage.appendChild(img);
-
-            const projectDetails = document.createElement('div');
-            projectDetails.className = 'project-details';
-            const title = document.createElement('h3');
-            title.textContent = result.textFile.replace('.txt', '');
-            const description = document.createElement('p');
-            description.textContent = result.textContent;
-
-            projectDetails.appendChild(title);
-            projectDetails.appendChild(description);
-
-            projectItem.appendChild(projectImage);
-            projectItem.appendChild(projectDetails);
-
-            photoGridContainer.appendChild(projectItem);
           });
         })
         .catch(error => {
