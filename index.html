@@ -167,52 +167,83 @@
           const files = Array.from(links).map(link => link.getAttribute('href'));
 
           // 过滤出 jpg 和 txt 文件
-          const imageFiles = files.filter(file => file.endsWith('.jpg'));
-          const textFiles = files.filter(file => file.endsWith('.txt'));
+          const imageFiles = files.filter(file => file.match(/^\d{2}.*\.jpg$/i));
+          const textFiles = files.filter(file => file.match(/^\d{2}.*\.txt$/i));
 
-          // 提取数字部分并排序
-          const sortedImageFiles = imageFiles.map(file => ({
-            file,
-            number: parseInt(file.match(/^\d+/)[0], 10)
-          })).sort((a, b) => a.number - b.number);
+          // 创建一个对象来存储匹配的文件对
+          const projectMap = {};
 
-          const sortedTextFiles = textFiles.map(file => ({
-            file,
-            number: parseInt(file.match(/^\d+/)[0], 10)
-          })).sort((a, b) => a.number - b.number);
+          // 处理图像文件
+          imageFiles.forEach(imageFile => {
+            const numberStr = imageFile.match(/^\d{2}/)[0];
+            projectMap[numberStr] = {
+              imageFile,
+              textFile: null,
+              textContent: ''
+            };
+          });
 
-          // 创建项目项
-          sortedImageFiles.forEach(imageItem => {
-            const correspondingTextFile = sortedTextFiles.find(textItem => textItem.number === imageItem.number);
-            if (correspondingTextFile) {
-              const projectItem = document.createElement('div');
-              projectItem.className = 'photo-grid-item';
+          // 处理文本文件
+          textFiles.forEach(textFile => {
+            const numberStr = textFile.match(/^\d{2}/)[0];
+            if (projectMap[numberStr]) {
+              projectMap[numberStr].textFile = textFile;
+            }
+          });
 
-              const projectImage = document.createElement('div');
-              projectImage.className = 'project-image';
-              const img = document.createElement('img');
-              img.src = `/文案与图片/${imageItem.file}`;
-              img.alt = `Project Image`;
-              projectImage.appendChild(img);
+          // 遍历项目映射并创建项目项
+          Object.keys(projectMap).sort().forEach(numberStr => {
+            const project = projectMap[numberStr];
+            if (project.imageFile && project.textFile) {
+              fetch(`/文案与图片/${project.textFile}`)
+                .then(textResponse => {
+                  if (!textResponse.ok) {
+                    return null;
+                  }
+                  return textResponse.text().then(textContent => ({
+                    ...project,
+                    textContent
+                  }));
+                })
+                .then(result => {
+                  if (result) {
+                    const projectItem = document.createElement('div');
+                    projectItem.className = 'photo-grid-item';
 
-              const projectDetails = document.createElement('div');
-              projectDetails.className = 'project-details';
-              const title = document.createElement('h3');
-              title.textContent = correspondingTextFile.file.replace('.txt', '');
-              const description = document.createElement('p');
-              fetch(`/文案与图片/${correspondingTextFile.file}`)
-                .then(response => response.text())
-                .then(textContent => {
-                  description.textContent = textContent;
+                    const projectImage = document.createElement('div');
+                    projectImage.className = 'project-image';
+                    const img = document.createElement('img');
+                    img.src = `/文案与图片/${result.imageFile}`;
+                    img.alt = `Project Image`;
+                    projectImage.appendChild(img);
+
+                    const projectDetails = document.createElement('div');
+                    projectDetails.className = 'project-details';
+                    const title = document.createElement('h3');
+                    title.textContent = result.textFile.replace('.txt', '');
+                    const description = document.createElement('p');
+                    description.textContent = result.textContent;
+
+                    projectDetails.appendChild(title);
+                    projectDetails.appendChild(description);
+
+                    projectItem.appendChild(projectImage);
+                    projectItem.appendChild(projectDetails);
+
+                    photoGridContainer.appendChild(projectItem);
+                  } else {
+                    // 创建一个灰色色块占位符
+                    const placeholderItem = document.createElement('div');
+                    placeholderItem.className = 'photo-grid-item';
+                    placeholderItem.style.backgroundColor = '#ccc';
+                    placeholderItem.style.height = '300px'; // 设置固定高度
+
+                    photoGridContainer.appendChild(placeholderItem);
+                  }
+                })
+                .catch(error => {
+                  console.error('Error loading projects:', error);
                 });
-
-              projectDetails.appendChild(title);
-              projectDetails.appendChild(description);
-
-              projectItem.appendChild(projectImage);
-              projectItem.appendChild(projectDetails);
-
-              photoGridContainer.appendChild(projectItem);
             } else {
               // 创建一个灰色色块占位符
               const placeholderItem = document.createElement('div');
