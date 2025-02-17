@@ -157,103 +157,70 @@
     document.addEventListener('DOMContentLoaded', () => {
       const photoGridContainer = document.getElementById('photo-grid-container');
 
-      // 存储匹配的文件对
-      const projectMap = {};
+      // 自动抓取从 01 到 99 的文件
+      const promises = [];
+      for (let i = 1; i <= 99; i++) {
+        const imageFile = `${i.toString().padStart(2, '0')}*.*`.replace('*', '.jpg');
+        const textFile = `${i.toString().padStart(2, '0')}*.*`.replace('*', '.txt');
 
-      // 获取文件列表
-      const repoOwner = 'VolcanoWood'; // 替换为你的 GitHub 用户名或组织名
-      const repoName = 'volcanowood.github.io'; // 替换为你的仓库名称
-
-      fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/%E6%96%87%E6%A1%A3%E4%B8%8E%E5%9B%BE%E7%89%87`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('Fetched files:', data); // 添加调试日志
-
-          data.forEach(file => {
-            const fileName = file.name;
-
-            // 处理图像文件
-            const imageMatch = fileName.match(/^(\d+).*\.jpg$/i);
-            if (imageMatch) {
-              const numberStr = parseInt(imageMatch[1], 10); // 使用 parseInt 提取数字
-              if (!projectMap[numberStr]) {
-                projectMap[numberStr] = {
-                  imageFile: null,
-                  textFile: null,
-                  textContent: ''
-                };
-              }
-              projectMap[numberStr].imageFile = fileName;
+        const promise = fetch(`/文案与图片/${imageFile}`)
+          .then(imageResponse => {
+            if (!imageResponse.ok) {
+              return null;
             }
-
-            // 处理文本文件
-            const textMatch = fileName.match(/^(\d+).*\.txt$/i);
-            if (textMatch) {
-              const numberStr = parseInt(textMatch[1], 10); // 使用 parseInt 提取数字
-              if (!projectMap[numberStr]) {
-                projectMap[numberStr] = {
-                  imageFile: null,
-                  textFile: null,
-                  textContent: ''
-                };
-              }
-              projectMap[numberStr].textFile = fileName;
-            }
+            return fetch(`/文案与图片/${textFile}`)
+              .then(textResponse => {
+                if (!textResponse.ok) {
+                  return null;
+                }
+                return textResponse.text().then(textContent => ({
+                  imageFile,
+                  textFile,
+                  textContent
+                }));
+              });
           });
 
-          // 遍历预设前缀范围并创建项目项
-          Object.keys(projectMap).sort((a, b) => a - b).forEach(numberStr => {
-            const project = projectMap[numberStr];
-            if (project && project.imageFile && project.textFile) {
-              fetch(`/文案与图片/${project.textFile}`)
-                .then(textResponse => {
-                  if (!textResponse.ok) {
-                    throw new Error(`HTTP error! Status: ${textResponse.status}`);
-                  }
-                  return textResponse.text().then(textContent => ({
-                    ...project,
-                    textContent
-                  }));
-                })
-                .then(result => {
-                  if (result) {
-                    const projectItem = document.createElement('div');
-                    projectItem.className = 'photo-grid-item';
+        promises.push(promise);
+      }
 
-                    const projectImage = document.createElement('div');
-                    projectImage.className = 'project-image';
-                    const img = document.createElement('img');
-                    img.src = `/文案与图片/${result.imageFile}`;
-                    img.alt = `Project Image`;
-                    projectImage.appendChild(img);
+      Promise.all(promises)
+        .then(results => {
+          // 过滤掉空结果并提取有效的项目
+          const validResults = results.filter(result => result !== null);
 
-                    const projectDetails = document.createElement('div');
-                    projectDetails.className = 'project-details';
-                    const title = document.createElement('h3');
-                    title.textContent = result.textFile.replace('.txt', '');
-                    const description = document.createElement('p');
-                    description.textContent = result.textContent;
+          // 提取数字部分进行排序
+          validResults.sort((a, b) => {
+            const numA = parseInt(a.imageFile.match(/^\d+/)[0], 10);
+            const numB = parseInt(b.imageFile.match(/^\d+/)[0], 10);
+            return numA - numB;
+          });
 
-                    projectDetails.appendChild(title);
-                    projectDetails.appendChild(description);
+          validResults.forEach(result => {
+            const projectItem = document.createElement('div');
+            projectItem.className = 'photo-grid-item';
 
-                    projectItem.appendChild(projectImage);
-                    projectItem.appendChild(projectDetails);
+            const projectImage = document.createElement('div');
+            projectImage.className = 'project-image';
+            const img = document.createElement('img');
+            img.src = `/文案与图片/${result.imageFile}`;
+            img.alt = `Project Image`;
+            projectImage.appendChild(img);
 
-                    photoGridContainer.appendChild(projectItem);
-                  } else {
-                    console.warn(`No matching files found for prefix ${numberStr}`);
-                  }
-                })
-                .catch(error => {
-                  console.error(`Error loading project for prefix ${numberStr}:`, error);
-                });
-            }
+            const projectDetails = document.createElement('div');
+            projectDetails.className = 'project-details';
+            const title = document.createElement('h3');
+            title.textContent = result.textFile.replace('.txt', '');
+            const description = document.createElement('p');
+            description.textContent = result.textContent;
+
+            projectDetails.appendChild(title);
+            projectDetails.appendChild(description);
+
+            projectItem.appendChild(projectImage);
+            projectItem.appendChild(projectDetails);
+
+            photoGridContainer.appendChild(projectItem);
           });
         })
         .catch(error => {
