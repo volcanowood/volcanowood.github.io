@@ -205,24 +205,23 @@
     document.addEventListener('DOMContentLoaded', () => {
       const photoGridContainer = document.getElementById('photo-grid-container');
 
-     // 自动抓取从 01 到 99 的文件
+      // 自动抓取从 01 到 99 的文件
       const promises = [];
       for (let i = 1; i <= 99; i++) {
         const imageFile = `${i.toString().padStart(2, '0')}.jpg`;
         const textFile = `${i.toString().padStart(2, '0')}.txt`;
 
-        const promise = fetch(imageFile)
+        const promise = fetch(`/文案与图片/${imageFile}`)
           .then(imageResponse => {
             if (!imageResponse.ok) {
               return null;
             }
-            return fetch(textFile)
+            return fetch(`/文案与图片/${textFile}`)
               .then(textResponse => {
                 if (!textResponse.ok) {
                   return null;
                 }
                 return textResponse.text().then(textContent => ({
-                  paddedIndex,
                   imageFile,
                   textFile,
                   textContent
@@ -235,34 +234,32 @@
 
       Promise.all(promises)
         .then(results => {
-          results.forEach(result => {
+          results.forEach((result, index) => {
             if (result) {
               const projectItem = document.createElement('div');
               projectItem.className = 'photo-grid-item';
 
-              const projectImageLink = document.createElement('a');
-              projectImageLink.href = `detail.html?id=${result.paddedIndex}`;
-
               const projectImage = document.createElement('div');
               projectImage.className = 'project-image';
+              const link = document.createElement('a');
+              link.href = index === 0 ? '/details.html' : '#'; // 第一个项目链接到详情页，其他项目暂时无链接
               const img = document.createElement('img');
-              img.src = result.imageFile;
-              img.alt = `Project Image ${result.paddedIndex}`;
-              projectImage.appendChild(img);
+              img.src = `/文案与图片/${result.imageFile}`;
+              img.alt = `Project Image`;
+              link.appendChild(img);
+              projectImage.appendChild(link);
 
               const projectDetails = document.createElement('div');
               projectDetails.className = 'project-details';
-              const lines = result.textContent.split('\n');
               const title = document.createElement('h3');
-              title.textContent = lines[0];
+              title.textContent = result.textFile.replace('.txt', '');
               const description = document.createElement('p');
-              description.textContent = lines.slice(1).join('\n');
+              description.textContent = result.textContent;
 
               projectDetails.appendChild(title);
               projectDetails.appendChild(description);
 
-              projectImageLink.appendChild(projectImage);
-              projectItem.appendChild(projectImageLink);
+              projectItem.appendChild(projectImage);
               projectItem.appendChild(projectDetails);
 
               photoGridContainer.appendChild(projectItem);
