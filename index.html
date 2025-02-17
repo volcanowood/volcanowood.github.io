@@ -43,10 +43,10 @@
       text-decoration: none;
       color: #000;
     }
-    .header .contact-icons img {
+    .header .contact-icons img,
+    .header .contact-icons svg {
       width: 24px;
       height: 24px;
-      cursor: pointer;
     }
 
     /* 照片墙样式 */
@@ -175,7 +175,9 @@
         <img src="https://img.icons8.com/ios-filled/50/000000/facebook.png" alt="Facebook">
       </a>
       <a id="wechat-icon">
-        <img src="https://img.icons8.com/ios-filled/50/000000/wechat--v1.png" alt="WeChat">
+        <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 50 50">
+          <path d="M 19 6 C 9.625 6 2 12.503906 2 20.5 C 2 24.769531 4.058594 28.609375 7.816406 31.390625 L 5.179688 39.304688 L 13.425781 34.199219 C 15.714844 34.917969 18.507813 35.171875 21.203125 34.875 C 23.390625 39.109375 28.332031 42 34 42 C 35.722656 42 37.316406 41.675781 38.796875 41.234375 L 45.644531 45.066406 L 43.734375 38.515625 C 46.3125 36.375 48 33.394531 48 30 C 48 23.789063 42.597656 18.835938 35.75 18.105469 C 34.40625 11.152344 27.367188 6 19 6 Z M 13 14 C 14.101563 14 15 14.898438 15 16 C 15 17.101563 14.101563 18 13 18 C 11.898438 18 11 17.101563 11 16 C 11 14.898438 11.898438 14 13 14 Z M 25 14 C 26.101563 14 27 14.898438 27 16 C 27 17.101563 26.101563 18 25 18 C 23.898438 18 23 17.101563 23 16 C 23 14.898438 23.898438 14 25 14 Z M 34 20 C 40.746094 20 46 24.535156 46 30 C 46 32.957031 44.492188 35.550781 42.003906 37.394531 L 41.445313 37.8125 L 42.355469 40.933594 L 39.105469 39.109375 L 38.683594 39.25 C 37.285156 39.71875 35.6875 40 34 40 C 27.253906 40 22 35.464844 22 30 C 22 24.535156 27.253906 20 34 20 Z M 29.5 26 C 28.699219 26 28 26.699219 28 27.5 C 28 28.300781 28.699219 29 29.5 29 C 30.300781 29 31 28.300781 31 27.5 C 31 26.699219 30.300781 26 29.5 26 Z M 38.5 26 C 37.699219 26 37 26.699219 37 27.5 C 37 28.300781 37.699219 29 38.5 29 C 39.300781 29 40 28.300781 40 27.5 C 40 26.699219 39.300781 26 38.5 26 Z"></path>
+        </svg>
       </a>
     </div>
   </header>
@@ -203,102 +205,61 @@
     document.addEventListener('DOMContentLoaded', () => {
       const photoGridContainer = document.getElementById('photo-grid-container');
 
-      // 存储匹配的文件对
-      const projectMap = {};
+      // 自动抓取从 01 到 99 的文件
+      const promises = [];
+      for (let i = 1; i <= 99; i++) {
+        const imageFile = `${i.toString().padStart(2, '0')}.jpg`;
+        const textFile = `${i.toString().padStart(2, '0')}.txt`;
 
-      // 获取文件列表
-      const repoOwner = 'VolcanoWood'; // 替换为你的 GitHub 用户名或组织名
-      const repoName = 'volcanowood.github.io'; // 替换为你的仓库名称
-
-      fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/%E6%96%87%E6%A1%A3%E4%B8%8E%E5%9B%BE%E7%89%87`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('Fetched files:', data); // 添加调试日志
-
-          data.forEach(file => {
-            const fileName = file.name;
-
-            // 处理图像文件
-            const imageMatch = fileName.match(/^(\d+)\.jpg$/i);
-            if (imageMatch) {
-              const numberStr = parseInt(imageMatch[1], 10); // 使用 parseInt 提取数字
-              if (!projectMap[numberStr]) {
-                projectMap[numberStr] = {
-                  imageFile: null,
-                  textFile: null,
-                  textContent: ''
-                };
-              }
-              projectMap[numberStr].imageFile = fileName;
+        const promise = fetch(`/文案与图片/${imageFile}`)
+          .then(imageResponse => {
+            if (!imageResponse.ok) {
+              return null;
             }
-
-            // 处理文本文件
-            const textMatch = fileName.match(/^(\d+)\.txt$/i);
-            if (textMatch) {
-              const numberStr = parseInt(textMatch[1], 10); // 使用 parseInt 提取数字
-              if (!projectMap[numberStr]) {
-                projectMap[numberStr] = {
-                  imageFile: null,
-                  textFile: null,
-                  textContent: ''
-                };
-              }
-              projectMap[numberStr].textFile = fileName;
-            }
+            return fetch(`/文案与图片/${textFile}`)
+              .then(textResponse => {
+                if (!textResponse.ok) {
+                  return null;
+                }
+                return textResponse.text().then(textContent => ({
+                  imageFile,
+                  textFile,
+                  textContent
+                }));
+              });
           });
 
-          // 遍历预设前缀范围并创建项目项
-          Object.keys(projectMap).sort((a, b) => a - b).forEach(numberStr => {
-            const project = projectMap[numberStr];
-            if (project && project.imageFile && project.textFile) {
-              fetch(`/文案与图片/${project.textFile}`)
-                .then(textResponse => {
-                  if (!textResponse.ok) {
-                    throw new Error(`HTTP error! Status: ${textResponse.status}`);
-                  }
-                  return textResponse.text().then(textContent => ({
-                    ...project,
-                    textContent
-                  }));
-                })
-                .then(result => {
-                  if (result) {
-                    const projectItem = document.createElement('div');
-                    projectItem.className = 'photo-grid-item';
+        promises.push(promise);
+      }
 
-                    const projectImage = document.createElement('div');
-                    projectImage.className = 'project-image';
-                    const img = document.createElement('img');
-                    img.src = `/文案与图片/${result.imageFile}`;
-                    img.alt = `Project Image`;
-                    projectImage.appendChild(img);
+      Promise.all(promises)
+        .then(results => {
+          results.forEach(result => {
+            if (result) {
+              const projectItem = document.createElement('div');
+              projectItem.className = 'photo-grid-item';
 
-                    const projectDetails = document.createElement('div');
-                    projectDetails.className = 'project-details';
-                    const title = document.createElement('h3');
-                    title.textContent = result.textFile.replace('.txt', '');
-                    const description = document.createElement('p');
-                    description.textContent = result.textContent;
+              const projectImage = document.createElement('div');
+              projectImage.className = 'project-image';
+              const img = document.createElement('img');
+              img.src = `/文案与图片/${result.imageFile}`;
+              img.alt = `Project Image`;
+              projectImage.appendChild(img);
 
-                    projectDetails.appendChild(title);
-                    projectDetails.appendChild(description);
+              const projectDetails = document.createElement('div');
+              projectDetails.className = 'project-details';
+              const title = document.createElement('h3');
+              title.textContent = result.textFile.replace('.txt', '');
+              const description = document.createElement('p');
+              description.textContent = result.textContent;
 
-                    projectItem.appendChild(projectImage);
-                    projectItem.appendChild(projectDetails);
+              projectDetails.appendChild(title);
+              projectDetails.appendChild(description);
 
-                    photoGridContainer.appendChild(projectItem);
-                  } else {
-                    console.warn(`No matching files found for prefix ${numberStr}`);
-                  }
-                })
-                .catch(error => {
-                  console.error(`Error loading project for prefix ${numberStr}:`, error);
-                });
+              projectItem.appendChild(projectImage);
+              projectItem.appendChild(projectDetails);
+
+              photoGridContainer.appendChild(projectItem);
             }
           });
         })
@@ -328,6 +289,7 @@
   </script>
 </body>
 </html>
+
 
 
 
