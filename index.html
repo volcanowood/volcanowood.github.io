@@ -157,29 +157,36 @@
     document.addEventListener('DOMContentLoaded', () => {
       const photoGridContainer = document.getElementById('photo-grid-container');
 
-      // 预设文件前缀范围（01 到 09）
-      const prefixRange = Array.from({ length: 9 }, (_, i) => String(i + 1).padStart(2, '0'));
+      // 自动抓取从 01 到 99 的文件
+      const promises = [];
+      for (let i = 1; i <= 99; i++) {
+        const imageFile = `${i.toString().padStart(2, '0')}.jpg`;
+        const textFile = `${i.toString().padStart(2, '0')}.txt`;
 
-      // 存储匹配的文件对
-      const projectMap = {};
-
-      // 遍历预设前缀范围并加载文件
-      prefixRange.forEach(numberStr => {
-        const imageFile = `${numberStr}.jpg`;
-        const textFile = `${numberStr}.txt`;
-
-        fetch(`/文案与图片/${textFile}`)
-          .then(textResponse => {
-            if (!textResponse.ok) {
+        const promise = fetch(`/文案与图片/${imageFile}`)
+          .then(imageResponse => {
+            if (!imageResponse.ok) {
               return null;
             }
-            return textResponse.text().then(textContent => ({
-              imageFile,
-              textFile,
-              textContent
-            }));
-          })
-          .then(result => {
+            return fetch(`/文案与图片/${textFile}`)
+              .then(textResponse => {
+                if (!textResponse.ok) {
+                  return null;
+                }
+                return textResponse.text().then(textContent => ({
+                  imageFile,
+                  textFile,
+                  textContent
+                }));
+              });
+          });
+
+        promises.push(promise);
+      }
+
+      Promise.all(promises)
+        .then(results => {
+          results.forEach(result => {
             if (result) {
               const projectItem = document.createElement('div');
               projectItem.className = 'photo-grid-item';
@@ -205,19 +212,16 @@
               projectItem.appendChild(projectDetails);
 
               photoGridContainer.appendChild(projectItem);
-            } else {
-              console.warn(`No matching files found for prefix ${numberStr}`);
             }
-          })
-          .catch(error => {
-            console.error(`Error loading project for prefix ${numberStr}:`, error);
           });
-      });
+        })
+        .catch(error => {
+          console.error('Error loading projects:', error);
+        });
     });
   </script>
 </body>
 </html>
-
 
 
 
