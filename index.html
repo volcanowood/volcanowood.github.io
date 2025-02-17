@@ -185,7 +185,21 @@
   <!-- 照片墙 -->
   <main>
     <h2 style="text-align: center; margin-bottom: 20px;">My Projects</h2>
-    <div id="photo-grid-container" class="photo-grid-container"></div>
+    <div id="photo-grid-container" class="photo-grid-container">
+      <!-- 手动添加项目 -->
+      <div class="photo-grid-item">
+        <a href="detail.html?id=01">
+          <div class="project-image">
+            <img src="文案与图片/01/01_1.jpg" alt="Project Image 01">
+          </div>
+          <div class="project-details">
+            <h3>Project One Title</h3>
+            <p>This is the detailed description for Project One.</p>
+          </div>
+        </a>
+      </div>
+      <!-- 添加更多项目时复制上面的结构 -->
+    </div>
   </main>
 
   <!-- Q&A 按钮 -->
@@ -202,93 +216,28 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const photoGridContainer = document.getElementById('photo-grid-container');
+    // 微信二维码模态框逻辑
+    const wechatIcon = document.getElementById('wechat-icon');
+    const wechatModal = document.getElementById('wechat-modal');
+    const closeModalSpan = wechatModal.getElementsByClassName('close')[0];
 
-      // 自动抓取从 01 到 99 的文件
-      const promises = [];
-      for (let i = 1; i <= 99; i++) {
-        const imageFile = `${i.toString().padStart(2, '0')}.jpg`;
-        const textFile = `${i.toString().padStart(2, '0')}.txt`;
+    wechatIcon.onclick = function() {
+      wechatModal.style.display = 'block';
+    };
 
-        const promise = fetch(`/文案与图片/${imageFile}`)
-          .then(imageResponse => {
-            if (!imageResponse.ok) {
-              return null;
-            }
-            return fetch(`/文案与图片/${textFile}`)
-              .then(textResponse => {
-                if (!textResponse.ok) {
-                  return null;
-                }
-                return textResponse.text().then(textContent => ({
-                  imageFile,
-                  textFile,
-                  textContent
-                }));
-              });
-          });
+    closeModalSpan.onclick = function() {
+      wechatModal.style.display = 'none';
+    };
 
-        promises.push(promise);
-      }
-
-      Promise.all(promises)
-        .then(results => {
-          results.forEach(result => {
-            if (result) {
-              const projectItem = document.createElement('div');
-              projectItem.className = 'photo-grid-item';
-
-              const projectImage = document.createElement('div');
-              projectImage.className = 'project-image';
-              const img = document.createElement('img');
-              img.src = `/文案与图片/${result.imageFile}`;
-              img.alt = `Project Image`;
-              projectImage.appendChild(img);
-
-              const projectDetails = document.createElement('div');
-              projectDetails.className = 'project-details';
-              const title = document.createElement('h3');
-              title.textContent = result.textFile.replace('.txt', '');
-              const description = document.createElement('p');
-              description.textContent = result.textContent;
-
-              projectDetails.appendChild(title);
-              projectDetails.appendChild(description);
-
-              projectItem.appendChild(projectImage);
-              projectItem.appendChild(projectDetails);
-
-              photoGridContainer.appendChild(projectItem);
-            }
-          });
-        })
-        .catch(error => {
-          console.error('Error loading projects:', error);
-        });
-
-      // 微信二维码模态框逻辑
-      const wechatIcon = document.getElementById('wechat-icon');
-      const wechatModal = document.getElementById('wechat-modal');
-      const closeModalSpan = wechatModal.getElementsByClassName('close')[0];
-
-      wechatIcon.onclick = function() {
-        wechatModal.style.display = 'block';
-      };
-
-      closeModalSpan.onclick = function() {
+    window.onclick = function(event) {
+      if (event.target == wechatModal) {
         wechatModal.style.display = 'none';
-      };
-
-      window.onclick = function(event) {
-        if (event.target == wechatModal) {
-          wechatModal.style.display = 'none';
-        }
-      };
-    });
+      }
+    };
   </script>
 </body>
 </html>
+
 
 
 
