@@ -208,22 +208,25 @@
       // 自动抓取从 01 到 99 的文件
       const promises = [];
       for (let i = 1; i <= 99; i++) {
-        const folderName = `${i.toString().padStart(2, '0')}`;
+        const imageFile = `${i.toString().padStart(2, '0')}.jpg`;
+        const textFile = `${i.toString().padStart(2, '0')}.txt`;
 
-        const promise = fetch(`/文案与图片/${folderName}/${folderName}_detail.txt`)
-          .then(response => {
-            if (!response.ok) {
+        const promise = fetch(`/文案与图片/${imageFile}`)
+          .then(imageResponse => {
+            if (!imageResponse.ok) {
               return null;
             }
-            return response.text().then(textContent => ({
-              id: i,
-              folderName,
-              textContent
-            }));
-          })
-          .catch(error => {
-            console.error(`Error fetching data for project ${i}:`, error);
-            return null;
+            return fetch(`/文案与图片/${textFile}`)
+              .then(textResponse => {
+                if (!textResponse.ok) {
+                  return null;
+                }
+                return textResponse.text().then(textContent => ({
+                  imageFile,
+                  textFile,
+                  textContent
+                }));
+              });
           });
 
         promises.push(promise);
@@ -239,26 +242,22 @@
               const projectImage = document.createElement('div');
               projectImage.className = 'project-image';
               const img = document.createElement('img');
-              img.src = `/文案与图片/${result.folderName}/${result.folderName}_1.jpg`;
-              img.alt = `Project Image ${result.id}`;
+              img.src = `/文案与图片/${result.imageFile}`;
+              img.alt = `Project Image`;
               projectImage.appendChild(img);
 
               const projectDetails = document.createElement('div');
               projectDetails.className = 'project-details';
               const title = document.createElement('h3');
-              title.textContent = result.textContent.split('\n')[0];
+              title.textContent = result.textFile.replace('.txt', '');
               const description = document.createElement('p');
-              description.textContent = result.textContent.split('\n').slice(1).join('\n');
+              description.textContent = result.textContent;
 
               projectDetails.appendChild(title);
               projectDetails.appendChild(description);
 
-              const link = document.createElement('a');
-              link.href = `detail.html?id=${result.id}`;
-              link.appendChild(projectImage);
-              link.appendChild(projectDetails);
-
-              projectItem.appendChild(link);
+              projectItem.appendChild(projectImage);
+              projectItem.appendChild(projectDetails);
 
               photoGridContainer.appendChild(projectItem);
             }
