@@ -165,8 +165,15 @@
       const repoName = 'your-repo-name'; // 替换为你的仓库名称
 
       fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/%E6%96%87%E6%A1%A3%E4%B8%8E%E5%9B%BE%E7%89%87`)
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then(data => {
+          console.log('Fetched files:', data); // 添加调试日志
+
           data.forEach(file => {
             const fileName = file.name;
 
@@ -206,7 +213,7 @@
               fetch(`/文案与图片/${project.textFile}`)
                 .then(textResponse => {
                   if (!textResponse.ok) {
-                    return null;
+                    throw new Error(`HTTP error! Status: ${textResponse.status}`);
                   }
                   return textResponse.text().then(textContent => ({
                     ...project,
