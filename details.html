@@ -44,8 +44,14 @@
       font-size: 16px;
       text-align: left;
     }
-    .project-image img {
-      width: 50vw; /* 屏幕宽度的一半 */
+    .photo-gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .photo-gallery img {
+      width: 45vw; /* 屏幕宽度的45%，确保图片不会过大 */
       height: auto;
       border-radius: 10px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -61,9 +67,7 @@
   <!-- 项目详细信息 -->
   <div id="project-details-container" class="project-details-container">
     <div id="project-description" class="project-description"></div>
-    <div class="project-image">
-      <img id="project-img" src="" alt="Project Image">
-    </div>
+    <div id="photo-gallery" class="photo-gallery"></div>
   </div>
 
   <script>
@@ -75,11 +79,7 @@
       }
 
       const projectDescriptionElement = document.getElementById('project-description');
-      const projectImgElement = document.getElementById('project-img');
-
-      // 加载图片
-      const imageSrc = `/文案与图片/${projectId}/${projectId}_1.jpg`;
-      projectImgElement.src = imageSrc;
+      const photoGalleryElement = document.getElementById('photo-gallery');
 
       // 加载文本内容
       fetch(`/文案与图片/${projectId}/${projectId}_detail.txt`)
@@ -91,6 +91,24 @@
           console.error('Error loading project details:', error);
           projectDescriptionElement.textContent = 'Failed to load project details.';
         });
+
+      // 自动抓取从 01 到 09 的图片
+      for (let i = 1; i <= 9; i++) {
+        const imageFile = `${projectId}_${i}.JPG`;
+        const imgSrc = `/文案与图片/${projectId}/${imageFile}`;
+
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.alt = `Project Image ${i}`;
+
+        img.onload = () => {
+          photoGalleryElement.appendChild(img);
+        };
+
+        img.onerror = () => {
+          console.log(`Image ${imageFile} not found.`);
+        };
+      }
     });
   </script>
 </body>
