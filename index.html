@@ -205,12 +205,11 @@
     document.addEventListener('DOMContentLoaded', () => {
       const photoGridContainer = document.getElementById('photo-grid-container');
 
-      // 自动抓取从 01 到 99 的文件
+     // 自动抓取从 01 到 99 的文件
       const promises = [];
       for (let i = 1; i <= 99; i++) {
-        const paddedIndex = i.toString().padStart(2, '0');
-        const imageFile = `/文案与图片/${paddedIndex}/${paddedIndex}_1.jpg`;
-        const textFile = `/文案与图片/${paddedIndex}/${paddedIndex}_detail.txt`;
+        const imageFile = `${i.toString().padStart(2, '0')}.jpg`;
+        const textFile = `${i.toString().padStart(2, '0')}.txt`;
 
         const promise = fetch(imageFile)
           .then(imageResponse => {
