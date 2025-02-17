@@ -163,113 +163,61 @@
       // 存储匹配的文件对
       const projectMap = {};
 
-      // 手动定义文件列表
-      const files = [
-        '01 小贵腹.jpg',
-        '01 小贵腹.txt',
-        '02 小贵腹.jpg',
-        '02 小贵腹.txt',
-        '03 小贵腹.jpg',
-        '03 小贵腹.txt',
-        '04 小贵腹.jpg',
-        '04 小贵腹.txt',
-        '05 小贵腹.jpg',
-        '05 小贵腹.txt',
-        '06 小贵腹.jpg',
-        '06 小贵腹.txt',
-        '07 小贵腹.jpg',
-        '07 小贵腹.txt',
-        '08 小贵腹.jpg',
-        '08 小贵腹.txt',
-        '09 小贵腹.jpg',
-        '09 小贵腹.txt'
-      ];
-
-      // 处理图像文件
-      files.forEach(file => {
-        const match = file.match(/^(\d{2}).*\.jpg$/i);
-        if (match) {
-          const numberStr = match[1];
-          if (!projectMap[numberStr]) {
-            projectMap[numberStr] = {
-              imageFile: null,
-              textFile: null,
-              textContent: ''
-            };
-          }
-          projectMap[numberStr].imageFile = file;
-        }
-      });
-
-      // 处理文本文件
-      files.forEach(file => {
-        const match = file.match(/^(\d{2}).*\.txt$/i);
-        if (match) {
-          const numberStr = match[1];
-          if (!projectMap[numberStr]) {
-            projectMap[numberStr] = {
-              imageFile: null,
-              textFile: null,
-              textContent: ''
-            };
-          }
-          projectMap[numberStr].textFile = file;
-        }
-      });
-
-      // 遍历预设前缀范围并创建项目项
+      // 遍历预设前缀范围并加载文件
       prefixRange.forEach(numberStr => {
-        const project = projectMap[numberStr];
-        if (project && project.imageFile && project.textFile) {
-          fetch(`/文案与图片/${project.textFile}`)
-            .then(textResponse => {
-              if (!textResponse.ok) {
-                return null;
-              }
-              return textResponse.text().then(textContent => ({
-                ...project,
-                textContent
-              }));
-            })
-            .then(result => {
-              if (result) {
-                const projectItem = document.createElement('div');
-                projectItem.className = 'photo-grid-item';
+        const imageFile = `${numberStr}.jpg`;
+        const textFile = `${numberStr}.txt`;
 
-                const projectImage = document.createElement('div');
-                projectImage.className = 'project-image';
-                const img = document.createElement('img');
-                img.src = `/文案与图片/${result.imageFile}`;
-                img.alt = `Project Image`;
-                projectImage.appendChild(img);
+        fetch(`/文案与图片/${textFile}`)
+          .then(textResponse => {
+            if (!textResponse.ok) {
+              return null;
+            }
+            return textResponse.text().then(textContent => ({
+              imageFile,
+              textFile,
+              textContent
+            }));
+          })
+          .then(result => {
+            if (result) {
+              const projectItem = document.createElement('div');
+              projectItem.className = 'photo-grid-item';
 
-                const projectDetails = document.createElement('div');
-                projectDetails.className = 'project-details';
-                const title = document.createElement('h3');
-                title.textContent = result.textFile.replace('.txt', '');
-                const description = document.createElement('p');
-                description.textContent = result.textContent;
+              const projectImage = document.createElement('div');
+              projectImage.className = 'project-image';
+              const img = document.createElement('img');
+              img.src = `/文案与图片/${result.imageFile}`;
+              img.alt = `Project Image`;
+              projectImage.appendChild(img);
 
-                projectDetails.appendChild(title);
-                projectDetails.appendChild(description);
+              const projectDetails = document.createElement('div');
+              projectDetails.className = 'project-details';
+              const title = document.createElement('h3');
+              title.textContent = result.textFile.replace('.txt', '');
+              const description = document.createElement('p');
+              description.textContent = result.textContent;
 
-                projectItem.appendChild(projectImage);
-                projectItem.appendChild(projectDetails);
+              projectDetails.appendChild(title);
+              projectDetails.appendChild(description);
 
-                photoGridContainer.appendChild(projectItem);
-              } else {
-                console.warn(`No matching files found for prefix ${numberStr}`);
-              }
-            })
-            .catch(error => {
-              console.error(`Error loading project for prefix ${numberStr}:`, error);
-            });
-        }
+              projectItem.appendChild(projectImage);
+              projectItem.appendChild(projectDetails);
+
+              photoGridContainer.appendChild(projectItem);
+            } else {
+              console.warn(`No matching files found for prefix ${numberStr}`);
+            }
+          })
+          .catch(error => {
+            console.error(`Error loading project for prefix ${numberStr}:`, error);
+          });
       });
     });
   </script>
 </body>
 </html>
+
 
 
 
