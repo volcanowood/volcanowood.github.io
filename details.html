@@ -82,7 +82,7 @@
       const photoGalleryElement = document.getElementById('photo-gallery');
 
       // 加载文本内容
-      fetch(`/文案与图片/${projectId}/${projectId}_detail.txt`)
+      fetch(`/details/${projectId}/${projectId}_detail.txt`)
         .then(response => {
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -100,8 +100,8 @@
       // 自动抓取从 01 到 09 的图片
       let imageIndex = 1;
       function loadImage() {
-        const imageFile = `${projectId}_${imageIndex}.JPG`;
-        const imgSrc = `/文案与图片/${projectId}/${imageFile}`;
+        const imageFile = `${projectId}_${imageIndex}.jpg`; // 注意这里使用小写的 jpg
+        const imgSrc = `/details/${projectId}/${imageFile}`;
 
         const img = document.createElement('img');
         img.src = imgSrc;
